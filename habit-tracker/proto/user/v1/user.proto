@@ -1,0 +1,265 @@
+syntax = "proto3";
+
+package user.v1;
+
+option go_package = "user-service/proto/user/v1;userpb";
+
+import "google/protobuf/timestamp.proto";
+
+// UserService provides user management and authentication
+service UserService {
+  // Register creates a new user account
+  rpc Register(RegisterRequest) returns (RegisterResponse);
+
+  // Login authenticates a user and returns tokens
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // Logout invalidates user session
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+
+  // RefreshToken generates new access token using refresh token
+  rpc RefreshToken(RefreshTokenRequest) returns (RefreshTokenResponse);
+
+  // ValidateToken validates access token (used by other services)
+  rpc ValidateToken(ValidateTokenRequest) returns (ValidateTokenResponse);
+
+  // GetUser retrieves user information by ID
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+
+  // GetUserByEmail retrieves user information by email
+  rpc GetUserByEmail(GetUserByEmailRequest) returns (GetUserResponse);
+
+  // UpdateUser updates user information
+  rpc UpdateUser(UpdateUserRequest) returns (UpdateUserResponse);
+
+  // ChangePassword changes user password
+  rpc ChangePassword(ChangePasswordRequest) returns (ChangePasswordResponse);
+
+  // GetUserSessions retrieves all active sessions for a user
+  rpc GetUserSessions(GetUserSessionsRequest) returns (GetUserSessionsResponse);
+
+  // RevokeSession revokes a specific session
+  rpc RevokeSession(RevokeSessionRequest) returns (RevokeSessionResponse);
+
+  // RevokeAllSessions revokes all sessions for a user
+  rpc RevokeAllSessions(RevokeAllSessionsRequest) returns (RevokeAllSessionsResponse);
+
+  // VerifyEmail verifies user email with token
+  rpc VerifyEmail(VerifyEmailRequest) returns (VerifyEmailResponse);
+
+  // ResendVerificationEmail resends verification email
+  rpc ResendVerificationEmail(ResendVerificationEmailRequest) returns (ResendVerificationEmailResponse);
+
+  // DeactivateUser deactivates user account
+  rpc DeactivateUser(DeactivateUserRequest) returns (DeactivateUserResponse);
+
+  // ForgotPassword initiates password reset process
+  rpc ForgotPassword(ForgotPasswordRequest) returns (ForgotPasswordResponse);
+
+  // ResetPassword completes password reset with token
+  rpc ResetPassword(ResetPasswordRequest) returns (ResetPasswordResponse);
+}
+
+// User message
+message User {
+  string id = 1;
+  string email = 2;
+  string username = 3;
+  string first_name = 4;
+  bool is_active = 5;
+  bool email_verified = 6;
+  string timezone = 7;
+  google.protobuf.Timestamp created_at = 8;
+  google.protobuf.Timestamp updated_at = 9;
+}
+
+// Session message
+message Session {
+  string id = 1;
+  string user_id = 2;
+  optional string ip_address = 3;
+  optional string user_agent = 4;
+  google.protobuf.Timestamp expires_at = 5;
+  google.protobuf.Timestamp created_at = 6;
+  google.protobuf.Timestamp last_activity_at = 7;
+}
+
+// Register
+message RegisterRequest {
+  string email = 1;
+  string username = 2;
+  string password = 3;
+  string first_name = 4;
+  string timezone = 5;
+}
+
+message RegisterResponse {
+  User user = 1;
+  bool email_sent = 2;
+}
+
+// Login
+message LoginRequest {
+  string email_or_username = 1;
+  string password = 2;
+  optional string ip_address = 3;
+  optional string user_agent = 4;
+}
+
+message LoginResponse {
+  User user = 1;
+  string access_token = 2;
+  string refresh_token = 3;
+  google.protobuf.Timestamp access_token_expires_at = 4;
+  google.protobuf.Timestamp refresh_token_expires_at = 5;
+}
+
+// Logout
+message LogoutRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message LogoutResponse {
+  bool success = 1;
+}
+
+// RefreshToken
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+message RefreshTokenResponse {
+  string access_token = 1;
+  string refresh_token = 2;
+  google.protobuf.Timestamp access_token_expires_at = 3;
+  google.protobuf.Timestamp refresh_token_expires_at = 4;
+}
+
+// ValidateToken
+message ValidateTokenRequest {
+  string access_token = 1;
+}
+
+message ValidateTokenResponse {
+  bool valid = 1;
+  optional string user_id = 2;
+  optional string error = 3;
+  optional string session_id = 4;
+}
+
+// GetUser
+message GetUserRequest {
+  string user_id = 1;
+}
+
+message GetUserByEmailRequest {
+  string email = 1;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+// UpdateUser
+message UpdateUserRequest {
+  string user_id = 1;
+  optional string first_name = 2;
+  optional string timezone = 3;
+  optional bool email_verified = 4;
+}
+
+message UpdateUserResponse {
+  User user = 1;
+}
+
+// ChangePassword
+message ChangePasswordRequest {
+  string user_id = 1;
+  string old_password = 2;
+  string new_password = 3;
+}
+
+message ChangePasswordResponse {
+  bool success = 1;
+}
+
+// GetUserSessions
+message GetUserSessionsRequest {
+  string user_id = 1;
+}
+
+message GetUserSessionsResponse {
+  repeated Session sessions = 1;
+}
+
+// RevokeSession
+message RevokeSessionRequest {
+  string user_id = 1;
+  string session_id = 2;
+}
+
+message RevokeSessionResponse {
+  bool success = 1;
+}
+
+// RevokeAllSessions
+message RevokeAllSessionsRequest {
+  string user_id = 1;
+}
+
+message RevokeAllSessionsResponse {
+  int32 revoked_count = 1;
+}
+
+// VerifyEmail
+message VerifyEmailRequest {
+  string token = 1;
+}
+
+message VerifyEmailResponse {
+  bool success = 1;
+  optional string error = 2;
+  optional User user = 3;
+}
+
+// ResendVerificationEmail
+message ResendVerificationEmailRequest {
+  string email = 1;
+}
+
+message ResendVerificationEmailResponse {
+  bool success = 1;
+  optional string error = 2;
+}
+
+// DeactivateUser
+message DeactivateUserRequest {
+  string user_id = 1;
+}
+
+message DeactivateUserResponse {
+  bool success = 1;
+  optional string error = 2;
+}
+
+// ForgotPassword
+message ForgotPasswordRequest {
+  string email = 1;
+}
+
+message ForgotPasswordResponse {
+  bool success = 1;
+  optional string message = 2;
+}
+
+// ResetPassword
+message ResetPasswordRequest {
+  string token = 1;
+  string new_password = 2;
+}
+
+message ResetPasswordResponse {
+  bool success = 1;
+  optional string error = 2;
+}

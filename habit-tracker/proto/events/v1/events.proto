@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package events.v1;
+
+option go_package = "notification-service/proto/events/v1;eventspb";
+
+import "google/protobuf/timestamp.proto";
+
+// EventType defines the type of event
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_USER_REGISTERED = 1;
+  EVENT_TYPE_EMAIL_VERIFICATION_REQUESTED = 2;
+  EVENT_TYPE_PASSWORD_RESET_REQUESTED = 3;
+  EVENT_TYPE_PASSWORD_CHANGED = 4;
+}
+
+// NotificationType defines the type of notification to send
+enum NotificationType {
+  NOTIFICATION_TYPE_UNSPECIFIED = 0;
+  NOTIFICATION_TYPE_EMAIL = 1;
+  NOTIFICATION_TYPE_SMS = 2;
+  NOTIFICATION_TYPE_PUSH = 3;
+}
+
+// UserRegisteredEvent is published when a new user registers
+message UserRegisteredEvent {
+  string user_id = 1;
+  string email = 2;
+  string username = 3;
+  string first_name = 4;
+  string verification_token = 5;
+  string timezone = 6;
+  google.protobuf.Timestamp created_at = 7;
+}
+
+// EmailVerificationRequestedEvent is published when email verification is requested
+message EmailVerificationRequestedEvent {
+  string user_id = 1;
+  string email = 2;
+  string verification_token = 3;
+  google.protobuf.Timestamp requested_at = 4;
+}
+
+// PasswordResetRequestedEvent is published when password reset is requested
+message PasswordResetRequestedEvent {
+  string user_id = 1;
+  string email = 2;
+  string reset_token = 3;
+  google.protobuf.Timestamp requested_at = 4;
+}
+
+// PasswordChangedEvent is published when password is changed or reset
+message PasswordChangedEvent {
+  string user_id = 1;
+  string email = 2;
+  google.protobuf.Timestamp changed_at = 3;
+  bool was_reset = 4; // true if changed via reset, false if changed via change password
+}
+
+// Event wrapper that contains all event types
+message Event {
+  string event_id = 1;
+  EventType event_type = 2;
+  google.protobuf.Timestamp timestamp = 3;
+
+  oneof payload {
+    UserRegisteredEvent user_registered = 10;
+    EmailVerificationRequestedEvent email_verification_requested = 11;
+    PasswordResetRequestedEvent password_reset_requested = 12;
+    PasswordChangedEvent password_changed = 13;
+  }
+}

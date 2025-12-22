@@ -1,0 +1,193 @@
+syntax = "proto3";
+
+package habits.v1;
+
+option go_package = "habits-service/proto/habits/v1;habitspb";
+
+import "google/protobuf/timestamp.proto";
+
+// HabitService provides habit management functionality
+service HabitService {
+  // CreateHabit creates a new habit
+  rpc CreateHabit(CreateHabitRequest) returns (CreateHabitResponse);
+
+  // GetHabit retrieves a habit by ID
+  rpc GetHabit(GetHabitRequest) returns (GetHabitResponse);
+
+  // ListHabits retrieves all habits for a user
+  rpc ListHabits(ListHabitsRequest) returns (ListHabitsResponse);
+
+  // UpdateHabit updates a habit
+  rpc UpdateHabit(UpdateHabitRequest) returns (UpdateHabitResponse);
+
+  // DeleteHabit soft deletes a habit
+  rpc DeleteHabit(DeleteHabitRequest) returns (DeleteHabitResponse);
+
+  // ConfirmHabit confirms habit completion for current period
+  rpc ConfirmHabit(ConfirmHabitRequest) returns (ConfirmHabitResponse);
+
+  // GetHabitHistory retrieves confirmation history for a habit
+  rpc GetHabitHistory(GetHabitHistoryRequest) returns (GetHabitHistoryResponse);
+
+  // GetHabitStats retrieves statistics for a habit
+  rpc GetHabitStats(GetHabitStatsRequest) returns (GetHabitStatsResponse);
+}
+
+// Schedule type enum
+enum ScheduleType {
+  SCHEDULE_TYPE_UNSPECIFIED = 0;
+  SCHEDULE_TYPE_INTERVAL = 1;  // Every N days
+  SCHEDULE_TYPE_WEEKLY = 2;    // Specific days of week
+}
+
+// Habit message
+message Habit {
+  string id = 1;
+  string user_id = 2;
+
+  // Basic info
+  string name = 3;
+  optional string description = 4;
+  optional string color = 5;  // HEX color, e.g., "#FF5722"
+
+  // Schedule configuration
+  ScheduleType schedule_type = 6;
+  optional int32 interval_days = 7;  // Required for INTERVAL type (1=daily, 2=every other day, etc.)
+  repeated int32 weekly_days = 8;     // Required for WEEKLY type (0=Sunday, 1=Monday, ..., 6=Saturday)
+
+  // Timezone offset in hours from UTC (-12 to +14)
+  int32 timezone_offset_hours = 9;
+
+  // Streak state
+  int32 streak = 10;
+  google.protobuf.Timestamp next_deadline_utc = 11;
+  bool confirmed_for_current_period = 12;
+  optional google.protobuf.Timestamp last_confirmed_at = 13;
+
+  // Metadata
+  bool is_active = 14;
+  google.protobuf.Timestamp created_at = 15;
+  google.protobuf.Timestamp updated_at = 16;
+}
+
+// HabitConfirmation message
+message HabitConfirmation {
+  string id = 1;
+  string habit_id = 2;
+  string user_id = 3;
+
+  google.protobuf.Timestamp confirmed_at = 4;
+  string confirmed_for_date = 5;  // Date in format "YYYY-MM-DD"
+  optional string notes = 6;
+
+  google.protobuf.Timestamp created_at = 7;
+}
+
+// CreateHabit
+message CreateHabitRequest {
+  string user_id = 1;
+  string name = 2;
+  optional string description = 3;
+  optional string color = 4;
+
+  ScheduleType schedule_type = 5;
+  optional int32 interval_days = 6;
+  repeated int32 weekly_days = 7;
+
+  string timezone = 8;  // IANA timezone string (e.g., "Europe/Moscow", "America/New_York")
+}
+
+message CreateHabitResponse {
+  Habit habit = 1;
+}
+
+// GetHabit
+message GetHabitRequest {
+  string habit_id = 1;
+  string user_id = 2;  // For authorization
+}
+
+message GetHabitResponse {
+  Habit habit = 1;
+}
+
+// ListHabits
+message ListHabitsRequest {
+  string user_id = 1;
+  optional bool active_only = 2;  // Filter only active habits
+}
+
+message ListHabitsResponse {
+  repeated Habit habits = 1;
+  int32 total_count = 2;
+}
+
+// UpdateHabit
+message UpdateHabitRequest {
+  string habit_id = 1;
+  string user_id = 2;  // For authorization
+
+  optional string name = 3;
+  optional string description = 4;
+  optional string color = 5;
+
+  optional ScheduleType schedule_type = 6;
+  optional int32 interval_days = 7;
+  repeated int32 weekly_days = 8;  // Empty array means no update
+
+  optional string timezone = 9;  // IANA timezone string (service will convert to offset)
+}
+
+message UpdateHabitResponse {
+  Habit habit = 1;
+}
+
+// DeleteHabit
+message DeleteHabitRequest {
+  string habit_id = 1;
+  string user_id = 2;  // For authorization
+}
+
+message DeleteHabitResponse {
+  bool success = 1;
+}
+
+// ConfirmHabit
+message ConfirmHabitRequest {
+  string habit_id = 1;
+  string user_id = 2;  // For authorization
+  optional string notes = 3;
+}
+
+message ConfirmHabitResponse {
+  Habit habit = 1;  // Updated habit with incremented streak
+  HabitConfirmation confirmation = 2;
+}
+
+// GetHabitHistory
+message GetHabitHistoryRequest {
+  string habit_id = 1;
+  string user_id = 2;  // For authorization
+  optional int32 limit = 3;   // Default 30
+  optional int32 offset = 4;  // For pagination
+}
+
+message GetHabitHistoryResponse {
+  repeated HabitConfirmation confirmations = 1;
+  int32 total_count = 2;
+}
+
+// GetHabitStats
+message GetHabitStatsRequest {
+  string habit_id = 1;
+  string user_id = 2;  // For authorization
+}
+
+message GetHabitStatsResponse {
+  int32 current_streak = 1;
+  int32 longest_streak = 2;
+  int32 total_confirmations = 3;
+  double completion_rate = 4;  // Percentage (0-100)
+  google.protobuf.Timestamp first_confirmation = 5;
+  google.protobuf.Timestamp last_confirmation = 6;
+}

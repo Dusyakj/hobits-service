@@ -1,0 +1,46 @@
+service:
+  name: habits-service
+  environment: ${SERVICE_ENVIRONMENT:development}
+  version: 1.0.0
+
+grpc:
+  port: 50054
+  max_connection_idle: 5m
+  max_connection_age: 30m
+  timeout: 30s
+
+database:
+  host: ${DATABASE_HOST:localhost}
+  port: ${DATABASE_PORT:5432}
+  user: ${DATABASE_USER:postgres}
+  password: ${DATABASE_PASSWORD:postgres}
+  database: ${DATABASE_NAME:habits_service}
+  ssl_mode: ${DATABASE_SSL_MODE:disable}
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: 5m
+
+redis:
+  addr: ${REDIS_ADDR:localhost:6379}
+  password: ${REDIS_PASSWORD:}
+  db: ${REDIS_DB:2}
+  max_retries: 3
+  pool_size: 10
+  min_idle_conns: 2
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+
+kafka:
+  brokers:
+    - ${KAFKA_BROKER:localhost:9092}
+  topic: habit-events
+
+scheduler:
+  enabled: ${SCHEDULER_ENABLED:true}
+  check_interval: ${SCHEDULER_CHECK_INTERVAL:1h}
+
+logging:
+  level: ${LOG_LEVEL:info}
+  format: json
+  output_path: stdout

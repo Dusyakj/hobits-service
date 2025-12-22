@@ -1,0 +1,42 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# Build artifacts
+*.exe
+*.test
+*.out
+bin/
+dist/
+
+# Dependencies
+vendor/
+
+# Test coverage
+*.coverage
+coverage.html
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Documentation
+README.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml

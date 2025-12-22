@@ -1,0 +1,58 @@
+service:
+  name: notification-service
+  environment: ${SERVICE_ENVIRONMENT:development}
+  version: 1.0.0
+
+database:
+  host: ${DATABASE_HOST:localhost}
+  port: ${DATABASE_PORT:5432}
+  user: ${DATABASE_USER:postgres}
+  password: ${DATABASE_PASSWORD:postgres}
+  database: ${DATABASE_NAME:notification_service}
+  ssl_mode: ${DATABASE_SSL_MODE:disable}
+  max_open_conns: 25
+  max_idle_conns: 5
+  conn_max_lifetime: 5m
+
+redis:
+  addr: ${REDIS_ADDR:localhost:6379}
+  password: ${REDIS_PASSWORD:}
+  db: ${REDIS_DB:2}
+  max_retries: 3
+  pool_size: 10
+  min_idle_conns: 2
+  dial_timeout: 5s
+  read_timeout: 3s
+  write_timeout: 3s
+
+kafka:
+  brokers:
+    - localhost:9092
+  topics:
+    - user-events
+  group_id: notification-service-group
+  consumer_group: notification-consumer
+  max_retries: 3
+  retry_backoff: 1s
+
+smtp:
+  host: ${SMTP_HOST:smtp.gmail.com}
+  port: ${SMTP_PORT:587}
+  username: ${SMTP_USERNAME:}
+  password: ${SMTP_PASSWORD:}
+  from_email: ${SMTP_FROM_EMAIL:noreply@habit-tracker.com}
+  from_name: ${SMTP_FROM_NAME:Habit Tracker}
+  use_tls: ${SMTP_USE_TLS:true}
+
+email:
+  verification_url: ${EMAIL_VERIFICATION_URL:http://localhost:8080/api/v1/auth/verify-email}
+  templates_path: ${EMAIL_TEMPLATES_PATH:./templates/email}
+
+logging:
+  level: ${LOG_LEVEL:info}
+  format: json
+  output_path: stdout
+
+metrics:
+  port: 9091
+  path: /metrics

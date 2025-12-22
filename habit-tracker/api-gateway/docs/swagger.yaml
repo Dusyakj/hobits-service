@@ -1,0 +1,999 @@
+basePath: /
+host: localhost:8080
+info:
+  contact:
+    email: support@habit-tracker.com
+    name: API Support
+  description: |-
+    API Gateway for Habit Tracker microservices
+    Provides REST API for user management, habits tracking, and authentication
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  title: Habit Tracker API
+  version: "1.0"
+paths:
+  /api/v1/auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Initiates password reset process by sending email with reset link
+      parameters:
+      - description: Email address
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Request password reset
+      tags:
+      - auth
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate user and receive access and refresh tokens
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            email_or_username:
+              type: string
+            password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              access_token:
+                type: string
+              email:
+                type: string
+              message:
+                type: string
+              refresh_token:
+                type: string
+              user_id:
+                type: string
+              username:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: User login
+      tags:
+      - auth
+  /api/v1/auth/logout:
+    post:
+      consumes:
+      - application/json
+      description: Invalidate current user session and tokens
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: User logout
+      tags:
+      - auth
+  /api/v1/auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Get new access and refresh tokens using refresh token
+      parameters:
+      - description: Refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            refresh_token:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              access_token:
+                type: string
+              message:
+                type: string
+              refresh_token:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Refresh access token
+      tags:
+      - auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user account and receive authentication tokens
+      parameters:
+      - description: Registration request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+            first_name:
+              type: string
+            password:
+              type: string
+            timezone:
+              type: string
+            username:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              access_token:
+                type: string
+              email:
+                type: string
+              message:
+                type: string
+              refresh_token:
+                type: string
+              user_id:
+                type: string
+              username:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Register new user
+      tags:
+      - auth
+  /api/v1/auth/resend-verification:
+    post:
+      consumes:
+      - application/json
+      description: Resend email verification link
+      parameters:
+      - description: Email address
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            email:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Resend verification email
+      tags:
+      - auth
+  /api/v1/auth/reset-password:
+    post:
+      consumes:
+      - application/json
+      description: Completes password reset using token from email
+      parameters:
+      - description: Reset token and new password
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            new_password:
+              type: string
+            token:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Reset password with token
+      tags:
+      - auth
+  /api/v1/auth/verify-email:
+    get:
+      consumes:
+      - application/json
+      description: Verify user email with token
+      parameters:
+      - description: Verification token
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              email:
+                type: string
+              message:
+                type: string
+              user_id:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      summary: Verify email
+      tags:
+      - auth
+  /api/v1/habits/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Mark habit as completed for the current period and increment streak
+      parameters:
+      - description: Habit ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Optional notes
+        in: body
+        name: request
+        schema:
+          properties:
+            notes:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              confirmation:
+                type: object
+              habit:
+                type: object
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Confirm habit completion
+      tags:
+      - habits
+  /api/v1/habits/create:
+    post:
+      consumes:
+      - application/json
+      description: Create a new habit with schedule configuration
+      parameters:
+      - description: Create habit request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            color:
+              type: string
+            description:
+              type: string
+            interval_days:
+              type: integer
+            name:
+              type: string
+            schedule_type:
+              type: string
+            timezone:
+              type: string
+            weekly_days:
+              items:
+                type: integer
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            properties:
+              habit:
+                type: object
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new habit
+      tags:
+      - habits
+  /api/v1/habits/delete:
+    post:
+      description: Soft delete a habit (mark as inactive)
+      parameters:
+      - description: Habit ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete habit
+      tags:
+      - habits
+  /api/v1/habits/get:
+    get:
+      description: Retrieve a single habit by its ID
+      parameters:
+      - description: Habit ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              color:
+                type: string
+              description:
+                type: string
+              id:
+                type: string
+              name:
+                type: string
+              schedule_type:
+                type: string
+              streak:
+                type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get habit by ID
+      tags:
+      - habits
+  /api/v1/habits/history:
+    get:
+      description: Retrieve the history of confirmations for a habit with pagination
+      parameters:
+      - description: Habit ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Limit (default 30)
+        in: query
+        name: limit
+        type: integer
+      - description: Offset (default 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              confirmations:
+                items:
+                  type: object
+                type: array
+              total_count:
+                type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get habit confirmation history
+      tags:
+      - habits
+  /api/v1/habits/list:
+    get:
+      description: Get all habits for the authenticated user
+      parameters:
+      - description: Filter only active habits
+        in: query
+        name: active_only
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              habits:
+                items:
+                  type: object
+                type: array
+              total_count:
+                type: integer
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all habits
+      tags:
+      - habits
+  /api/v1/habits/stats:
+    get:
+      description: Get statistics including current streak, longest streak, total
+        confirmations, and completion rate
+      parameters:
+      - description: Habit ID
+        in: query
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              completion_rate:
+                type: number
+              current_streak:
+                type: integer
+              first_confirmation:
+                type: string
+              last_confirmation:
+                type: string
+              longest_streak:
+                type: integer
+              total_confirmations:
+                type: integer
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get habit statistics
+      tags:
+      - habits
+  /api/v1/habits/update:
+    post:
+      consumes:
+      - application/json
+      description: Update an existing habit's properties
+      parameters:
+      - description: Habit ID
+        in: query
+        name: id
+        required: true
+        type: string
+      - description: Update habit request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            color:
+              type: string
+            description:
+              type: string
+            interval_days:
+              type: integer
+            name:
+              type: string
+            schedule_type:
+              type: string
+            timezone:
+              type: string
+            weekly_days:
+              items:
+                type: integer
+              type: array
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              habit:
+                type: object
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update habit
+      tags:
+      - habits
+  /api/v1/users/change-password:
+    post:
+      consumes:
+      - application/json
+      description: Change user password (requires old password)
+      parameters:
+      - description: Password change request
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            new_password:
+              type: string
+            old_password:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Change password
+      tags:
+      - users
+  /api/v1/users/deactivate:
+    delete:
+      consumes:
+      - application/json
+      description: Deactivate user account (soft delete)
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              message:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Deactivate account
+      tags:
+      - users
+  /api/v1/users/profile:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve authenticated user's profile information
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              created_at:
+                type: string
+              email:
+                type: string
+              first_name:
+                type: string
+              id:
+                type: string
+              is_active:
+                type: boolean
+              timezone:
+                type: string
+              username:
+                type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            properties:
+              error:
+                type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

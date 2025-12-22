@@ -1,0 +1,26 @@
+service:
+  name: api-gateway
+  environment: ${SERVICE_ENVIRONMENT:development}
+  version: 1.0.0
+
+http:
+  port: ${HTTP_PORT:8080}
+  read_timeout: 15
+  write_timeout: 15
+
+grpc:
+  user_service_addr: ${USER_SERVICE_ADDR:localhost:50053}
+  habits_service_addr: ${HABITS_SERVICE_ADDR:localhost:50051}
+  bad_habits_service_addr: ${BAD_HABITS_SERVICE_ADDR:localhost:50052}
+  timeout: 30
+
+jwt:
+  secret: ${JWT_SECRET:your-secret-key-change-this-in-production}
+
+logging:
+  level: ${LOG_LEVEL:info}
+  format: json
+
+metrics:
+  port: 9091
+  path: /metrics
