@@ -439,9 +439,7 @@ func (s *habitService) ResetConfirmationFlags(ctx context.Context) error {
 func (s *habitService) ProcessExpiredConfirmedDeadlines(ctx context.Context) error {
 	now := time.Now().UTC()
 
-	beforeTime := now.Add(-24 * time.Hour)
-
-	habits, err := s.habitRepo.GetConfirmedHabitsWithExpiredDeadlines(ctx, beforeTime)
+	habits, err := s.habitRepo.GetConfirmedHabitsWithExpiredDeadlines(ctx, now)
 	if err != nil {
 		return fmt.Errorf("failed to get confirmed habits with expired deadlines: %w", err)
 	}
