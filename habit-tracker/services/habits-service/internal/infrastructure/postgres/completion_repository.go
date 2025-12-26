@@ -54,7 +54,7 @@ func (r *habitConfirmationRepository) GetByHabitID(ctx context.Context, habitID 
 
 	query := `
 		SELECT
-			id, habit_id, user_id, confirmed_at, confirmed_for_date, notes, created_at
+			id, habit_id, user_id, confirmed_at, confirmed_for_date::TEXT, notes, created_at
 		FROM habit_confirmations
 		WHERE habit_id = $1
 		ORDER BY confirmed_for_date DESC
@@ -109,7 +109,7 @@ func (r *habitConfirmationRepository) CountByHabitID(ctx context.Context, habitI
 func (r *habitConfirmationRepository) GetLatestByHabitID(ctx context.Context, habitID uuid.UUID) (*entity.HabitConfirmation, error) {
 	query := `
 		SELECT
-			id, habit_id, user_id, confirmed_at, confirmed_for_date, notes, created_at
+			id, habit_id, user_id, confirmed_at, confirmed_for_date::TEXT, notes, created_at
 		FROM habit_confirmations
 		WHERE habit_id = $1
 		ORDER BY confirmed_for_date DESC
