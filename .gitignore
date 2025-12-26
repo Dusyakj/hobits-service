@@ -32,3 +32,6 @@ go.work.sum
 # .vscode/
 
 .claude
+
+# Frontend directory
+front/

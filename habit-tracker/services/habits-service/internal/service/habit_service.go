@@ -97,7 +97,6 @@ func (s *habitService) CalculateNextDeadline(habit *entity.Habit, fromTime time.
 		nextLocalDeadline = s.findNextWeeklyDeadline(localTime, habit.WeeklyDays)
 	}
 
-	// Set to end of day (23:59:59) in local timezone
 	nextLocalDeadline = time.Date(
 		nextLocalDeadline.Year(),
 		nextLocalDeadline.Month(),

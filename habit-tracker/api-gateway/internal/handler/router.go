@@ -60,6 +60,9 @@ func (r *Router) Setup() http.Handler {
 
 	var handler http.Handler = r.mux
 
+	// Apply CORS middleware first (before other middleware)
+	handler = middleware.CORS(handler)
+
 	handler = middleware.Logging(handler)
 
 	handler = middleware.RateLimit(60)(handler)
