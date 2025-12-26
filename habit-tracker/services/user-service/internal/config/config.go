@@ -9,14 +9,14 @@ import (
 )
 
 type Config struct {
-	Service    ServiceConfig    `yaml:"service"`
-	GRPC       GRPCConfig       `yaml:"grpc"`
-	Database   DatabaseConfig   `yaml:"database"`
-	Redis      RedisConfig      `yaml:"redis"`
-	Kafka      KafkaConfig      `yaml:"kafka"`
-	JWT        JWTConfig        `yaml:"jwt"`
-	Logging    LoggingConfig    `yaml:"logging"`
-	Metrics    MetricsConfig    `yaml:"metrics"`
+	Service  ServiceConfig  `yaml:"service"`
+	GRPC     GRPCConfig     `yaml:"grpc"`
+	Database DatabaseConfig `yaml:"database"`
+	Redis    RedisConfig    `yaml:"redis"`
+	Kafka    KafkaConfig    `yaml:"kafka"`
+	JWT      JWTConfig      `yaml:"jwt"`
+	Logging  LoggingConfig  `yaml:"logging"`
+	Metrics  MetricsConfig  `yaml:"metrics"`
 }
 
 type ServiceConfig struct {
@@ -45,17 +45,17 @@ type DatabaseConfig struct {
 }
 
 type RedisConfig struct {
-	Addr               string        `yaml:"addr"`
-	Password           string        `yaml:"password"`
-	DB                 int           `yaml:"db"`
-	SessionDB          int           `yaml:"session_db"`
-	MaxRetries         int           `yaml:"max_retries"`
-	PoolSize           int           `yaml:"pool_size"`
-	MinIdleConns       int           `yaml:"min_idle_conns"`
-	SessionTTL         time.Duration `yaml:"session_ttl"`
-	DialTimeout        time.Duration `yaml:"dial_timeout"`
-	ReadTimeout        time.Duration `yaml:"read_timeout"`
-	WriteTimeout       time.Duration `yaml:"write_timeout"`
+	Addr         string        `yaml:"addr"`
+	Password     string        `yaml:"password"`
+	DB           int           `yaml:"db"`
+	SessionDB    int           `yaml:"session_db"`
+	MaxRetries   int           `yaml:"max_retries"`
+	PoolSize     int           `yaml:"pool_size"`
+	MinIdleConns int           `yaml:"min_idle_conns"`
+	SessionTTL   time.Duration `yaml:"session_ttl"`
+	DialTimeout  time.Duration `yaml:"dial_timeout"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
 }
 
 type KafkaConfig struct {
@@ -65,10 +65,10 @@ type KafkaConfig struct {
 }
 
 type JWTConfig struct {
-	Secret            string        `yaml:"secret"`
-	AccessTokenTTL    time.Duration `yaml:"access_token_ttl"`
-	RefreshTokenTTL   time.Duration `yaml:"refresh_token_ttl"`
-	Issuer            string        `yaml:"issuer"`
+	Secret          string        `yaml:"secret"`
+	AccessTokenTTL  time.Duration `yaml:"access_token_ttl"`
+	RefreshTokenTTL time.Duration `yaml:"refresh_token_ttl"`
+	Issuer          string        `yaml:"issuer"`
 }
 
 type LoggingConfig struct {
@@ -99,7 +99,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to populate config: %w", err)
 	}
 
-	// Override with environment variables
 	cfg.overrideFromEnv()
 
 	return &cfg, nil

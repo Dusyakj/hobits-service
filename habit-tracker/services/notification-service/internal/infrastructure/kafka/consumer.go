@@ -15,9 +15,9 @@ import (
 )
 
 type Consumer struct {
-	reader             *kafka.Reader
+	reader              *kafka.Reader
 	notificationService service.NotificationService
-	emailService       service.EmailService
+	emailService        service.EmailService
 }
 
 // NewConsumer creates a new Kafka consumer
@@ -30,16 +30,16 @@ func NewConsumer(
 		Brokers:        cfg.Brokers,
 		GroupID:        cfg.GroupID,
 		Topic:          cfg.Topics[0], // user-events
-		MinBytes:       10e3,           // 10KB
-		MaxBytes:       10e6,           // 10MB
+		MinBytes:       10e3,          // 10KB
+		MaxBytes:       10e6,          // 10MB
 		CommitInterval: time.Second,
 		StartOffset:    kafka.LastOffset,
 	})
 
 	return &Consumer{
-		reader:             reader,
+		reader:              reader,
 		notificationService: notificationService,
-		emailService:       emailService,
+		emailService:        emailService,
 	}
 }
 
@@ -99,7 +99,6 @@ func (c *Consumer) handleUserRegistered(ctx context.Context, event *eventspb.Use
 
 	log.Printf("Sending verification email to %s (user_id: %s)", event.Email, event.UserId)
 
-	// Send verification email
 	err := c.emailService.SendVerificationEmail(
 		ctx,
 		event.Email,
@@ -123,7 +122,6 @@ func (c *Consumer) handleEmailVerificationRequested(ctx context.Context, event *
 
 	log.Printf("Resending verification email to %s (user_id: %s)", event.Email, event.UserId)
 
-	// Send verification email
 	err := c.emailService.SendVerificationEmail(
 		ctx,
 		event.Email,
@@ -147,7 +145,6 @@ func (c *Consumer) handlePasswordResetRequested(ctx context.Context, event *even
 
 	log.Printf("Sending password reset email to %s (user_id: %s)", event.Email, event.UserId)
 
-	// Send password reset email
 	err := c.emailService.SendPasswordResetEmail(
 		ctx,
 		event.Email,
@@ -172,7 +169,6 @@ func (c *Consumer) handlePasswordChanged(ctx context.Context, event *eventspb.Pa
 	log.Printf("Sending password changed notification to %s (user_id: %s, was_reset: %v)",
 		event.Email, event.UserId, event.WasReset)
 
-	// Send password changed notification email
 	err := c.emailService.SendPasswordChangedEmail(
 		ctx,
 		event.Email,

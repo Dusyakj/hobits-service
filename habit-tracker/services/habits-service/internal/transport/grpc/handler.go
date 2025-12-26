@@ -24,8 +24,6 @@ func NewHabitServiceHandler(habitService service.HabitService) *HabitServiceHand
 	}
 }
 
-// Helper functions for mapping
-
 func mapScheduleTypeToProto(scheduleType entity.ScheduleType) pb.ScheduleType {
 	switch scheduleType {
 	case entity.ScheduleTypeInterval:
@@ -106,7 +104,6 @@ func mapConfirmationToProto(confirmation *entity.HabitConfirmation) *pb.HabitCon
 // RPC Handlers
 
 func (h *HabitServiceHandler) CreateHabit(ctx context.Context, req *pb.CreateHabitRequest) (*pb.CreateHabitResponse, error) {
-	// Validate request
 	if req.UserId == "" {
 		return nil, status.Error(codes.InvalidArgument, "user_id is required")
 	}

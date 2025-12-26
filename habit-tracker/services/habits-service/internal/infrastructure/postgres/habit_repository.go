@@ -270,6 +270,49 @@ func (r *habitRepository) GetHabitsWithMissedDeadlines(ctx context.Context) ([]*
 	return habits, nil
 }
 
+func (r *habitRepository) GetHabitsToResetConfirmation(ctx context.Context, fromTime, toTime time.Time) ([]*entity.Habit, error) {
+	query := `
+		SELECT
+			id, user_id, name, description, color,
+			schedule_type, interval_days, weekly_days, timezone_offset_hours,
+			streak, next_deadline_utc, confirmed_for_current_period, last_confirmed_at,
+			is_active, created_at, updated_at
+		FROM habits
+		WHERE is_active = TRUE
+		  AND confirmed_for_current_period = TRUE
+		  AND next_deadline_utc >= $1
+		  AND next_deadline_utc <= $2
+		ORDER BY next_deadline_utc ASC
+	`
+
+	rows, err := r.pool.Query(ctx, query, fromTime, toTime)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get habits to reset confirmation: %w", err)
+	}
+	defer rows.Close()
+
+	var habits []*entity.Habit
+	for rows.Next() {
+		habit := &entity.Habit{}
+		err := rows.Scan(
+			&habit.ID, &habit.UserID, &habit.Name, &habit.Description, &habit.Color,
+			&habit.ScheduleType, &habit.IntervalDays, &habit.WeeklyDays, &habit.TimezoneOffsetHours,
+			&habit.Streak, &habit.NextDeadlineUTC, &habit.ConfirmedForCurrentPeriod, &habit.LastConfirmedAt,
+			&habit.IsActive, &habit.CreatedAt, &habit.UpdatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan habit: %w", err)
+		}
+		habits = append(habits, habit)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("failed to iterate habits: %w", err)
+	}
+
+	return habits, nil
+}
+
 func (r *habitRepository) ResetConfirmationFlag(ctx context.Context, habitID uuid.UUID) error {
 	query := `
 		UPDATE habits SET

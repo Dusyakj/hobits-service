@@ -19,15 +19,12 @@ type Server struct {
 
 // NewServer creates a new gRPC server
 func NewServer(handler *UserServiceHandler, port int) *Server {
-	// Create gRPC server with options
 	grpcServer := grpc.NewServer(
-		// TODO: Add interceptors for logging, metrics, recovery
+	// TODO: Add interceptors for logging, metrics, recovery
 	)
 
-	// Register service
 	pb.RegisterUserServiceServer(grpcServer, handler)
 
-	// Register reflection service (for grpcurl, grpc_cli, etc.)
 	reflection.Register(grpcServer)
 
 	return &Server{

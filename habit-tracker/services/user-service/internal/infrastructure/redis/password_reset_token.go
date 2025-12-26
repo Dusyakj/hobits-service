@@ -39,7 +39,6 @@ func (s *PasswordResetTokenStorage) GenerateToken() (string, error) {
 // StoreToken stores a password reset token with user ID and email
 func (s *PasswordResetTokenStorage) StoreToken(ctx context.Context, token, userID, email string) error {
 	key := passwordResetTokenPrefix + token
-	// Store both user ID and email as JSON-like string
 	value := fmt.Sprintf("%s:%s", userID, email)
 	err := s.client.Set(ctx, key, value, passwordResetTokenTTL).Err()
 	if err != nil {
@@ -59,12 +58,11 @@ func (s *PasswordResetTokenStorage) GetTokenData(ctx context.Context, token stri
 		return "", "", fmt.Errorf("failed to get password reset token: %w", err)
 	}
 	
-	// Parse value (format: "userID:email")
 	var uid, em string
 	if _, err := fmt.Sscanf(value, "%s:%s", &uid, &em); err != nil {
 		return "", "", fmt.Errorf("invalid token data format")
 	}
-	
+
 	return uid, em, nil
 }
 

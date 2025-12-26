@@ -14,10 +14,8 @@ const (
 )
 
 var (
-	// Email regex pattern (basic validation)
 	emailRegex = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
 
-	// Username regex pattern (alphanumeric, underscore, hyphen)
 	usernameRegex = regexp.MustCompile(`^[a-zA-Z0-9_\-]+$`)
 )
 
@@ -86,7 +84,6 @@ func ValidateTimezone(timezone string) error {
 		return fmt.Errorf("timezone is required")
 	}
 
-	// Basic validation - just check it's not empty and reasonable length
 	if len(timezone) > 50 {
 		return fmt.Errorf("timezone is too long")
 	}

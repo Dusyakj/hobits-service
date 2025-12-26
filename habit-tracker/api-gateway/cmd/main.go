@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
+	_ "api-gateway/docs"
 	"api-gateway/internal/app"
-	_ "api-gateway/docs" // Import generated docs
 )
 
 // @title Habit Tracker API
@@ -12,13 +12,12 @@ import (
 // @description API Gateway for Habit Tracker microservices
 // @description Provides REST API for user management, habits tracking, and authentication
 
-// @contact.name API Support
-// @contact.email support@habit-tracker.com
+// @contact.name
+// @contact.email
 
 // @license.name MIT
 // @license.url https://opensource.org/licenses/MIT
 
-// @host localhost:8080
 // @BasePath /
 
 // @securityDefinitions.apikey BearerAuth

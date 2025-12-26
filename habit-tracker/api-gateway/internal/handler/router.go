@@ -42,7 +42,6 @@ func (r *Router) Setup() http.Handler {
 	r.mux.HandleFunc("/api/v1/users/change-password", r.authMiddleware.Auth(r.userHandler.ChangePassword))
 	r.mux.HandleFunc("/api/v1/users/deactivate", r.authMiddleware.Auth(r.userHandler.DeactivateAccount))
 
-	// Habit routes (all require authentication)
 	r.mux.HandleFunc("/api/v1/habits/create", r.authMiddleware.Auth(r.habitHandler.CreateHabit))
 	r.mux.HandleFunc("/api/v1/habits/list", r.authMiddleware.Auth(r.habitHandler.ListHabits))
 	r.mux.HandleFunc("/api/v1/habits/get", r.authMiddleware.Auth(r.habitHandler.GetHabit))

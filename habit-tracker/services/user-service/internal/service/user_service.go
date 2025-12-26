@@ -27,7 +27,6 @@ func NewUserService(userRepo repository.UserRepository) service.UserService {
 
 // CreateUser creates a new user with hashed password
 func (s *userService) CreateUser(ctx context.Context, userCreate *entity.UserCreate) (*entity.User, error) {
-	// Check if email already exists
 	emailExists, err := s.userRepo.EmailExists(ctx, userCreate.Email)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check email existence: %w", err)
@@ -36,7 +35,6 @@ func (s *userService) CreateUser(ctx context.Context, userCreate *entity.UserCre
 		return nil, fmt.Errorf("email already registered")
 	}
 
-	// Check if username already exists
 	usernameExists, err := s.userRepo.UsernameExists(ctx, userCreate.Username)
 	if err != nil {
 		return nil, fmt.Errorf("failed to check username existence: %w", err)
@@ -45,13 +43,11 @@ func (s *userService) CreateUser(ctx context.Context, userCreate *entity.UserCre
 		return nil, fmt.Errorf("username already taken")
 	}
 
-	// Hash password
 	passwordHash, err := hash.HashPassword(userCreate.Password)
 	if err != nil {
 		return nil, fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	// Create user entity
 	now := time.Now()
 	user := &entity.User{
 		ID:            uuid.New(),
@@ -66,7 +62,6 @@ func (s *userService) CreateUser(ctx context.Context, userCreate *entity.UserCre
 		UpdatedAt:     now,
 	}
 
-	// Save to database
 	if err := s.userRepo.Create(ctx, user); err != nil {
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
@@ -103,13 +98,11 @@ func (s *userService) GetUserByUsername(ctx context.Context, username string) (*
 
 // UpdateUser updates user information
 func (s *userService) UpdateUser(ctx context.Context, userID uuid.UUID, userUpdate *entity.UserUpdate) (*entity.User, error) {
-	// Get existing user
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
-	// Update fields if provided
 	if userUpdate.FirstName != nil {
 		user.FirstName = userUpdate.FirstName
 	}
@@ -120,7 +113,6 @@ func (s *userService) UpdateUser(ctx context.Context, userID uuid.UUID, userUpda
 		user.EmailVerified = *userUpdate.EmailVerified
 	}
 
-	// Save changes
 	if err := s.userRepo.Update(ctx, user); err != nil {
 		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
@@ -130,24 +122,20 @@ func (s *userService) UpdateUser(ctx context.Context, userID uuid.UUID, userUpda
 
 // ChangePassword changes user password
 func (s *userService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
-	// Get user
 	user, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
 		return fmt.Errorf("failed to get user: %w", err)
 	}
 
-	// Verify old password
 	if err := hash.ComparePassword(user.PasswordHash, oldPassword); err != nil {
 		return fmt.Errorf("invalid current password")
 	}
 
-	// Hash new password
 	newPasswordHash, err := hash.HashPassword(newPassword)
 	if err != nil {
 		return fmt.Errorf("failed to hash new password: %w", err)
 	}
 
-	// Update password
 	if err := s.userRepo.UpdatePassword(ctx, userID, newPasswordHash); err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}
@@ -157,13 +145,11 @@ func (s *userService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 
 // UpdatePassword updates user password without checking old password (for password reset)
 func (s *userService) UpdatePassword(ctx context.Context, userID uuid.UUID, newPassword string) error {
-	// Hash new password
 	newPasswordHash, err := hash.HashPassword(newPassword)
 	if err != nil {
 		return fmt.Errorf("failed to hash new password: %w", err)
 	}
 
-	// Update password
 	if err := s.userRepo.UpdatePassword(ctx, userID, newPasswordHash); err != nil {
 		return fmt.Errorf("failed to update password: %w", err)
 	}

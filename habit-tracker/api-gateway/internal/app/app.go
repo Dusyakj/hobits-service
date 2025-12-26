@@ -16,8 +16,8 @@ import (
 	"api-gateway/internal/config"
 	"api-gateway/internal/handler"
 	"api-gateway/internal/middleware"
-	userpb "api-gateway/proto/user/v1"
 	habitspb "api-gateway/proto/habits/v1"
+	userpb "api-gateway/proto/user/v1"
 )
 
 // App represents the application
@@ -39,12 +39,10 @@ func New() (*App, error) {
 		grpcConns: make([]*grpc.ClientConn, 0),
 	}
 
-	// Initialize gRPC clients
 	if err := app.initGRPCClients(); err != nil {
 		return nil, fmt.Errorf("failed to initialize gRPC clients: %w", err)
 	}
 
-	// Initialize HTTP server
 	if err := app.initHTTPServer(); err != nil {
 		return nil, fmt.Errorf("failed to initialize HTTP server: %w", err)
 	}
@@ -54,7 +52,6 @@ func New() (*App, error) {
 
 // initGRPCClients initializes connections to all gRPC services
 func (a *App) initGRPCClients() error {
-	// Connect to user-service
 	userConn, err := grpc.NewClient(
 		a.cfg.GRPC.UserServiceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -64,7 +61,6 @@ func (a *App) initGRPCClients() error {
 	}
 	a.grpcConns = append(a.grpcConns, userConn)
 
-	// Connect to habits-service
 	habitsConn, err := grpc.NewClient(
 		a.cfg.GRPC.HabitsServiceAddr,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
@@ -83,22 +79,17 @@ func (a *App) initGRPCClients() error {
 
 // initHTTPServer initializes the HTTP server with all handlers and middleware
 func (a *App) initHTTPServer() error {
-	// Get gRPC clients
 	userClient := userpb.NewUserServiceClient(a.grpcConns[0])
 	habitsClient := habitspb.NewHabitServiceClient(a.grpcConns[1])
 
-	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(userClient)
 
-	// Initialize handlers
 	userHandler := handler.NewUserHandler(userClient)
 	habitHandler := handler.NewHabitHandler(habitsClient)
 
-	// Setup router
 	router := handler.NewRouter(userHandler, habitHandler, authMiddleware)
 	httpHandler := router.Setup()
 
-	// Create HTTP server
 	a.httpServer = &http.Server{
 		Addr:         fmt.Sprintf(":%d", a.cfg.HTTP.Port),
 		Handler:      httpHandler,
@@ -112,11 +103,9 @@ func (a *App) initHTTPServer() error {
 
 // Run starts the application
 func (a *App) Run() error {
-	// Start rate limit cleanup goroutine
 	log.Println("Starting rate limit cleanup routine")
 	middleware.CleanupVisitors()
 
-	// Start HTTP server
 	go func() {
 		log.Printf("Starting HTTP server on %s", a.httpServer.Addr)
 		if err := a.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -124,23 +113,19 @@ func (a *App) Run() error {
 		}
 	}()
 
-	// Wait for interrupt signal
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	<-quit
 
 	log.Println("Shutting down server...")
 
-	// Graceful shutdown
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	// Shutdown HTTP server
 	if err := a.httpServer.Shutdown(ctx); err != nil {
 		log.Printf("HTTP server shutdown error: %v", err)
 	}
 
-	// Close gRPC connections
 	for _, conn := range a.grpcConns {
 		if err := conn.Close(); err != nil {
 			log.Printf("Failed to close gRPC connection: %v", err)

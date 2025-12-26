@@ -72,13 +72,11 @@ func (m *AuthMiddleware) Auth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Extract user ID from response
 		if resp.UserId == nil {
 			http.Error(w, "Missing user ID in token", http.StatusUnauthorized)
 			return
 		}
 
-		// Extract session ID from response
 		if resp.SessionId == nil {
 			http.Error(w, "Missing session ID in token", http.StatusUnauthorized)
 			return

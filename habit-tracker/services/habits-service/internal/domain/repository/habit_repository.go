@@ -31,6 +31,10 @@ type HabitRepository interface {
 	// GetHabitsWithMissedDeadlines retrieves habits that have passed their deadline and haven't been confirmed
 	GetHabitsWithMissedDeadlines(ctx context.Context) ([]*entity.Habit, error)
 
+	// GetHabitsToResetConfirmation retrieves confirmed habits where deadline is within time window
+	// (to reset confirmation flag for new period)
+	GetHabitsToResetConfirmation(ctx context.Context, fromTime, toTime time.Time) ([]*entity.Habit, error)
+
 	// ResetConfirmationFlag resets the confirmed_for_current_period flag for a habit
 	ResetConfirmationFlag(ctx context.Context, habitID uuid.UUID) error
 

@@ -12,11 +12,9 @@ type HabitConfirmation struct {
 	HabitID uuid.UUID
 	UserID  uuid.UUID
 
-	// Confirmation details
 	ConfirmedAt      time.Time
 	ConfirmedForDate string // Date in format "YYYY-MM-DD" (in habit's timezone)
 
-	// Metadata
 	Notes     *string
 	CreatedAt time.Time
 }

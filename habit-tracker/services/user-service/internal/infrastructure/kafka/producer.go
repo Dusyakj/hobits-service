@@ -28,7 +28,7 @@ func NewProducer(cfg *config.KafkaConfig) *Producer {
 		Balancer:     &kafka.LeastBytes{},
 		BatchSize:    10,
 		BatchTimeout: 10 * time.Millisecond,
-		Async:        true, // Async for better performance
+		Async:        true,
 	}
 
 	return &Producer{
@@ -38,7 +38,6 @@ func NewProducer(cfg *config.KafkaConfig) *Producer {
 
 // PublishUserRegisteredEvent publishes a user registration event
 func (p *Producer) PublishUserRegisteredEvent(ctx context.Context, event *UserRegisteredEvent) error {
-	// Create protobuf event
 	protoEvent := &eventspb.Event{
 		EventId:   event.EventID,
 		EventType: eventspb.EventType_EVENT_TYPE_USER_REGISTERED,
@@ -56,7 +55,6 @@ func (p *Producer) PublishUserRegisteredEvent(ctx context.Context, event *UserRe
 		},
 	}
 
-	// Marshal to protobuf bytes
 	data, err := proto.Marshal(protoEvent)
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
@@ -184,7 +182,6 @@ type PasswordChangedEvent struct {
 	WasReset  bool
 }
 
-// Helper function to create event ID
 func NewEventID() string {
 	return uuid.New().String()
 }

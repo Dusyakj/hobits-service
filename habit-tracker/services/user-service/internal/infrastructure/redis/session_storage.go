@@ -43,37 +43,31 @@ func (s *SessionStorage) userSessionsKey(userID uuid.UUID) string {
 
 // Set stores a session in Redis
 func (s *SessionStorage) Set(ctx context.Context, session *entity.Session) error {
-	// Calculate TTL based on expiration
 	ttl := time.Until(session.ExpiresAt)
 	if ttl <= 0 {
 		return fmt.Errorf("session already expired")
 	}
 
-	// Serialize session to JSON
 	data, err := json.Marshal(session)
 	if err != nil {
 		return fmt.Errorf("failed to marshal session: %w", err)
 	}
 
-	// Store session data
 	sessionKey := s.sessionKey(session.ID)
 	if err := s.client.Set(ctx, sessionKey, data, ttl).Err(); err != nil {
 		return fmt.Errorf("failed to store session: %w", err)
 	}
 
-	// Store token hash -> session ID mapping
 	tokenHashKey := s.tokenHashKey(session.TokenHash)
 	if err := s.client.Set(ctx, tokenHashKey, session.ID.String(), ttl).Err(); err != nil {
 		return fmt.Errorf("failed to store token hash mapping: %w", err)
 	}
 
-	// Add session to user's sessions set
 	userSessionsKey := s.userSessionsKey(session.UserID)
 	if err := s.client.SAdd(ctx, userSessionsKey, session.ID.String()).Err(); err != nil {
 		return fmt.Errorf("failed to add session to user set: %w", err)
 	}
 
-	// Set expiration on user sessions set
 	if err := s.client.Expire(ctx, userSessionsKey, s.sessionTTL+24*time.Hour).Err(); err != nil {
 		return fmt.Errorf("failed to set expiration on user sessions: %w", err)
 	}

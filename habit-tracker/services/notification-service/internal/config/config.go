@@ -102,7 +102,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to populate config: %w", err)
 	}
 
-	// Override with environment variables
 	cfg.overrideFromEnv()
 
 	return &cfg, nil

@@ -28,8 +28,6 @@ func NewDeadlineChecker(habitService service.HabitService, checkInterval time.Du
 
 // Start starts the deadline checker
 func (d *DeadlineChecker) Start() error {
-	// Convert interval to cron expression
-	// For example, if interval is 1 hour, run every hour
 	cronExpr := fmt.Sprintf("@every %s", d.interval.String())
 
 	log.Printf("Starting deadline checker with interval: %s", d.interval)
@@ -63,7 +61,14 @@ func (d *DeadlineChecker) checkDeadlines() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	err := d.habitService.ProcessMissedDeadlines(ctx)
+	// Reset confirmation flags for habits entering new period
+	err := d.habitService.ResetConfirmationFlags(ctx)
+	if err != nil {
+		log.Printf("Error resetting confirmation flags: %v", err)
+	}
+
+	// Process missed deadlines and reset streaks
+	err = d.habitService.ProcessMissedDeadlines(ctx)
 	if err != nil {
 		log.Printf("Error processing missed deadlines: %v", err)
 		return

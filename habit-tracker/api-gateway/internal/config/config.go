@@ -8,12 +8,12 @@ import (
 )
 
 type Config struct {
-	Service  ServiceConfig  `yaml:"service"`
-	HTTP     HTTPConfig     `yaml:"http"`
-	GRPC     GRPCConfig     `yaml:"grpc"`
-	JWT      JWTConfig      `yaml:"jwt"`
-	Logging  LoggingConfig  `yaml:"logging"`
-	Metrics  MetricsConfig  `yaml:"metrics"`
+	Service ServiceConfig `yaml:"service"`
+	HTTP    HTTPConfig    `yaml:"http"`
+	GRPC    GRPCConfig    `yaml:"grpc"`
+	JWT     JWTConfig     `yaml:"jwt"`
+	Logging LoggingConfig `yaml:"logging"`
+	Metrics MetricsConfig `yaml:"metrics"`
 }
 
 type ServiceConfig struct {
@@ -23,9 +23,9 @@ type ServiceConfig struct {
 }
 
 type HTTPConfig struct {
-	Port         int    `yaml:"port"`
-	ReadTimeout  int    `yaml:"read_timeout"`
-	WriteTimeout int    `yaml:"write_timeout"`
+	Port         int `yaml:"port"`
+	ReadTimeout  int `yaml:"read_timeout"`
+	WriteTimeout int `yaml:"write_timeout"`
 }
 
 type GRPCConfig struct {
@@ -66,7 +66,6 @@ func Load() (*Config, error) {
 		return nil, fmt.Errorf("failed to populate config: %w", err)
 	}
 
-	// Override with environment variables
 	cfg.overrideFromEnv()
 
 	return &cfg, nil

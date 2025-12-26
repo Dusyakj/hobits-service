@@ -27,7 +27,6 @@ func NewNotificationService(
 }
 
 func (s *notificationService) SendEmailVerification(ctx context.Context, data *entity.EmailVerificationData) error {
-	// Create notification record
 	notification := &entity.Notification{
 		UserID:  data.UserID,
 		Type:    entity.NotificationTypeEmail,
@@ -37,8 +36,8 @@ func (s *notificationService) SendEmailVerification(ctx context.Context, data *e
 		To:      data.Email,
 		Metadata: map[string]string{
 			"verification_token": data.VerificationToken,
-			"username":          data.Username,
-			"first_name":        data.FirstName,
+			"username":           data.Username,
+			"first_name":         data.FirstName,
 		},
 	}
 
@@ -46,7 +45,6 @@ func (s *notificationService) SendEmailVerification(ctx context.Context, data *e
 		return fmt.Errorf("failed to create notification record: %w", err)
 	}
 
-	// Send email
 	err := s.emailService.SendVerificationEmail(
 		ctx,
 		data.Email,
@@ -55,7 +53,6 @@ func (s *notificationService) SendEmailVerification(ctx context.Context, data *e
 		data.VerificationToken,
 	)
 
-	// Update notification status
 	now := time.Now().Format(time.RFC3339)
 	if err != nil {
 		errMsg := err.Error()
@@ -73,7 +70,6 @@ func (s *notificationService) SendEmailVerification(ctx context.Context, data *e
 }
 
 func (s *notificationService) SendPasswordReset(ctx context.Context, data *entity.PasswordResetData) error {
-	// Create notification record
 	notification := &entity.Notification{
 		UserID:  data.UserID,
 		Type:    entity.NotificationTypeEmail,
@@ -92,7 +88,6 @@ func (s *notificationService) SendPasswordReset(ctx context.Context, data *entit
 		return fmt.Errorf("failed to create notification record: %w", err)
 	}
 
-	// Send email
 	err := s.emailService.SendPasswordResetEmail(
 		ctx,
 		data.Email,
@@ -101,7 +96,6 @@ func (s *notificationService) SendPasswordReset(ctx context.Context, data *entit
 		data.ResetToken,
 	)
 
-	// Update notification status
 	now := time.Now().Format(time.RFC3339)
 	if err != nil {
 		errMsg := err.Error()

@@ -12,7 +12,7 @@ import (
 )
 
 type habitService struct {
-	habitRepo       repository.HabitRepository
+	habitRepo        repository.HabitRepository
 	confirmationRepo repository.HabitConfirmationRepository
 }
 
@@ -22,7 +22,7 @@ func NewHabitService(
 	confirmationRepo repository.HabitConfirmationRepository,
 ) service.HabitService {
 	return &habitService{
-		habitRepo:       habitRepo,
+		habitRepo:        habitRepo,
 		confirmationRepo: confirmationRepo,
 	}
 }
@@ -34,10 +34,8 @@ func ConvertTimezoneToOffset(timezone string) (int32, error) {
 		return 0, fmt.Errorf("invalid timezone: %w", err)
 	}
 
-	// Get current time in that timezone
 	now := time.Now().In(loc)
 
-	// Get the offset in seconds and convert to hours
 	_, offset := now.Zone()
 	offsetHours := int32(offset / 3600)
 
@@ -46,17 +44,14 @@ func ConvertTimezoneToOffset(timezone string) (int32, error) {
 
 // CalculateInitialDeadline calculates the initial deadline when creating a habit
 func (s *habitService) CalculateInitialDeadline(habit *entity.Habit, fromTime time.Time) time.Time {
-	// Get local time for the habit's timezone
 	localTime := habit.GetLocalTime(fromTime)
 
-	// Calculate initial deadline date in local timezone
 	var deadlineLocalDate time.Time
 
 	if habit.IsInterval() {
 		// For interval: first deadline is always today
 		deadlineLocalDate = localTime
 	} else if habit.IsWeekly() {
-		// For weekly: check if today is one of the scheduled days
 		currentWeekday := int32(localTime.Weekday())
 		isTodayScheduled := false
 
@@ -68,10 +63,8 @@ func (s *habitService) CalculateInitialDeadline(habit *entity.Habit, fromTime ti
 		}
 
 		if isTodayScheduled {
-			// Today is scheduled, deadline is today
 			deadlineLocalDate = localTime
 		} else {
-			// Find next scheduled day
 			deadlineLocalDate = s.findNextWeeklyDeadline(localTime, habit.WeeklyDays)
 		}
 	}
@@ -82,10 +75,9 @@ func (s *habitService) CalculateInitialDeadline(habit *entity.Habit, fromTime ti
 		deadlineLocalDate.Month(),
 		deadlineLocalDate.Day(),
 		23, 59, 59, 0,
-		time.UTC, // We'll adjust for timezone offset below
+		time.UTC,
 	)
 
-	// Convert back to UTC by subtracting the timezone offset
 	offset := time.Duration(habit.TimezoneOffsetHours) * time.Hour
 	nextUTC := deadlineLocalDate.Add(-offset)
 
@@ -94,18 +86,14 @@ func (s *habitService) CalculateInitialDeadline(habit *entity.Habit, fromTime ti
 
 // CalculateNextDeadline calculates the next deadline after confirmation
 func (s *habitService) CalculateNextDeadline(habit *entity.Habit, fromTime time.Time) time.Time {
-	// Get local time for the habit's timezone
 	localTime := habit.GetLocalTime(fromTime)
 
-	// Calculate next deadline date in local timezone
 	var nextLocalDeadline time.Time
 
 	if habit.IsInterval() {
-		// For interval: add interval_days to current date
 		daysToAdd := int(*habit.IntervalDays)
 		nextLocalDeadline = localTime.AddDate(0, 0, daysToAdd)
 	} else if habit.IsWeekly() {
-		// For weekly: find next occurrence of any scheduled weekday
 		nextLocalDeadline = s.findNextWeeklyDeadline(localTime, habit.WeeklyDays)
 	}
 
@@ -115,10 +103,9 @@ func (s *habitService) CalculateNextDeadline(habit *entity.Habit, fromTime time.
 		nextLocalDeadline.Month(),
 		nextLocalDeadline.Day(),
 		23, 59, 59, 0,
-		time.UTC, // We'll adjust for timezone offset below
+		time.UTC,
 	)
 
-	// Convert back to UTC by subtracting the timezone offset
 	offset := time.Duration(habit.TimezoneOffsetHours) * time.Hour
 	nextUTC := nextLocalDeadline.Add(-offset)
 
@@ -129,11 +116,9 @@ func (s *habitService) CalculateNextDeadline(habit *entity.Habit, fromTime time.
 func (s *habitService) findNextWeeklyDeadline(fromTime time.Time, weeklyDays []int32) time.Time {
 	currentWeekday := int32(fromTime.Weekday())
 
-	// Try to find a scheduled day in the next 7 days (starting from tomorrow)
 	for daysAhead := int32(1); daysAhead <= 7; daysAhead++ {
 		nextWeekday := (currentWeekday + daysAhead) % 7
 
-		// Check if this weekday is scheduled
 		for _, scheduledDay := range weeklyDays {
 			if scheduledDay == nextWeekday {
 				return fromTime.AddDate(0, 0, int(daysAhead))
@@ -141,14 +126,12 @@ func (s *habitService) findNextWeeklyDeadline(fromTime time.Time, weeklyDays []i
 		}
 	}
 
-	// Fallback: add 7 days (shouldn't happen if weeklyDays is valid)
 	return fromTime.AddDate(0, 0, 7)
 }
 
 func (s *habitService) CreateHabit(ctx context.Context, userID uuid.UUID, name string, description, color *string,
 	scheduleType entity.ScheduleType, intervalDays *int32, weeklyDays []int32, timezone string) (*entity.Habit, error) {
 
-	// Validate schedule type
 	if scheduleType == entity.ScheduleTypeInterval && (intervalDays == nil || *intervalDays <= 0) {
 		return nil, fmt.Errorf("interval_days is required and must be positive for interval schedule")
 	}
@@ -157,13 +140,31 @@ func (s *habitService) CreateHabit(ctx context.Context, userID uuid.UUID, name s
 		return nil, fmt.Errorf("weekly_days is required for weekly schedule")
 	}
 
-	// Convert timezone to offset
 	timezoneOffset, err := ConvertTimezoneToOffset(timezone)
 	if err != nil {
 		return nil, fmt.Errorf("failed to convert timezone: %w", err)
 	}
 
-	// Create habit entity
+	confirmedForCurrentPeriod := false
+	if scheduleType == entity.ScheduleTypeWeekly {
+		// Get current time in user's timezone
+		loc, _ := time.LoadLocation(timezone)
+		now := time.Now().In(loc)
+		currentWeekday := int32(now.Weekday())
+
+		isTodayScheduled := false
+		for _, scheduledDay := range weeklyDays {
+			if scheduledDay == currentWeekday {
+				isTodayScheduled = true
+				break
+			}
+		}
+
+		if !isTodayScheduled {
+			confirmedForCurrentPeriod = true
+		}
+	}
+
 	habit := &entity.Habit{
 		ID:                        uuid.New(),
 		UserID:                    userID,
@@ -175,7 +176,7 @@ func (s *habitService) CreateHabit(ctx context.Context, userID uuid.UUID, name s
 		WeeklyDays:                weeklyDays,
 		TimezoneOffsetHours:       timezoneOffset,
 		Streak:                    0,
-		ConfirmedForCurrentPeriod: false,
+		ConfirmedForCurrentPeriod: confirmedForCurrentPeriod,
 		LastConfirmedAt:           nil,
 		IsActive:                  true,
 		CreatedAt:                 time.Now().UTC(),
@@ -185,7 +186,6 @@ func (s *habitService) CreateHabit(ctx context.Context, userID uuid.UUID, name s
 	// Calculate initial deadline (special logic for first deadline)
 	habit.NextDeadlineUTC = s.CalculateInitialDeadline(habit, time.Now().UTC())
 
-	// Save to database
 	if err := s.habitRepo.Create(ctx, habit); err != nil {
 		return nil, fmt.Errorf("failed to create habit: %w", err)
 	}
@@ -214,13 +214,11 @@ func (s *habitService) ListHabits(ctx context.Context, userID uuid.UUID, activeO
 func (s *habitService) UpdateHabit(ctx context.Context, habitID, userID uuid.UUID, name *string, description, color *string,
 	scheduleType *entity.ScheduleType, intervalDays *int32, weeklyDays []int32, timezone *string) (*entity.Habit, error) {
 
-	// Get existing habit
 	habit, err := s.habitRepo.GetByIDAndUserID(ctx, habitID, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Update fields if provided
 	if name != nil {
 		habit.Name = *name
 	}
@@ -267,7 +265,6 @@ func (s *habitService) UpdateHabit(ctx context.Context, habitID, userID uuid.UUI
 
 	habit.UpdatedAt = time.Now().UTC()
 
-	// Validate schedule
 	if habit.ScheduleType == entity.ScheduleTypeInterval && (habit.IntervalDays == nil || *habit.IntervalDays <= 0) {
 		return nil, fmt.Errorf("interval_days is required and must be positive for interval schedule")
 	}
@@ -276,7 +273,6 @@ func (s *habitService) UpdateHabit(ctx context.Context, habitID, userID uuid.UUI
 		return nil, fmt.Errorf("weekly_days is required for weekly schedule")
 	}
 
-	// Save to database
 	if err := s.habitRepo.Update(ctx, habit); err != nil {
 		return nil, fmt.Errorf("failed to update habit: %w", err)
 	}
@@ -285,7 +281,6 @@ func (s *habitService) UpdateHabit(ctx context.Context, habitID, userID uuid.UUI
 }
 
 func (s *habitService) DeleteHabit(ctx context.Context, habitID, userID uuid.UUID) error {
-	// Verify ownership
 	_, err := s.habitRepo.GetByIDAndUserID(ctx, habitID, userID)
 	if err != nil {
 		return err
@@ -295,13 +290,11 @@ func (s *habitService) DeleteHabit(ctx context.Context, habitID, userID uuid.UUI
 }
 
 func (s *habitService) ConfirmHabit(ctx context.Context, habitID, userID uuid.UUID, notes *string) (*entity.Habit, *entity.HabitConfirmation, error) {
-	// Get habit
 	habit, err := s.habitRepo.GetByIDAndUserID(ctx, habitID, userID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// Check if already confirmed for current period
 	if habit.ConfirmedForCurrentPeriod {
 		return nil, nil, fmt.Errorf("habit already confirmed for current period")
 	}
@@ -309,7 +302,6 @@ func (s *habitService) ConfirmHabit(ctx context.Context, habitID, userID uuid.UU
 	// Get current date in habit's timezone
 	currentDate := habit.GetCurrentLocalDate()
 
-	// Check if already confirmed for today (double-check)
 	exists, err := s.confirmationRepo.ExistsForDate(ctx, habitID, currentDate)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to check existing confirmation: %w", err)
@@ -319,7 +311,6 @@ func (s *habitService) ConfirmHabit(ctx context.Context, habitID, userID uuid.UU
 		return nil, nil, fmt.Errorf("habit already confirmed for date %s", currentDate)
 	}
 
-	// Create confirmation
 	confirmation := &entity.HabitConfirmation{
 		ID:               uuid.New(),
 		HabitID:          habitID,
@@ -334,16 +325,13 @@ func (s *habitService) ConfirmHabit(ctx context.Context, habitID, userID uuid.UU
 		return nil, nil, fmt.Errorf("failed to create confirmation: %w", err)
 	}
 
-	// Increment streak
 	habit.Streak++
 	habit.ConfirmedForCurrentPeriod = true
 	now := time.Now().UTC()
 	habit.LastConfirmedAt = &now
 
-	// Calculate next deadline
 	habit.NextDeadlineUTC = s.CalculateNextDeadline(habit, now)
 
-	// Update habit
 	if err := s.habitRepo.UpdateStreakAndDeadline(ctx, habitID, habit.Streak, habit.NextDeadlineUTC, true); err != nil {
 		return nil, nil, fmt.Errorf("failed to update habit: %w", err)
 	}
@@ -352,7 +340,6 @@ func (s *habitService) ConfirmHabit(ctx context.Context, habitID, userID uuid.UU
 }
 
 func (s *habitService) GetHabitHistory(ctx context.Context, habitID, userID uuid.UUID, limit, offset int32) ([]*entity.HabitConfirmation, int32, error) {
-	// Verify ownership
 	_, err := s.habitRepo.GetByIDAndUserID(ctx, habitID, userID)
 	if err != nil {
 		return nil, 0, err
@@ -372,7 +359,6 @@ func (s *habitService) GetHabitHistory(ctx context.Context, habitID, userID uuid
 }
 
 func (s *habitService) GetHabitStats(ctx context.Context, habitID, userID uuid.UUID) (*repository.HabitStats, error) {
-	// Verify ownership
 	_, err := s.habitRepo.GetByIDAndUserID(ctx, habitID, userID)
 	if err != nil {
 		return nil, err
@@ -387,29 +373,66 @@ func (s *habitService) GetHabitStats(ctx context.Context, habitID, userID uuid.U
 }
 
 func (s *habitService) ProcessMissedDeadlines(ctx context.Context) error {
-	// Get all habits with missed deadlines
 	habits, err := s.habitRepo.GetHabitsWithMissedDeadlines(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get habits with missed deadlines: %w", err)
 	}
 
 	for _, habit := range habits {
-		// Reset streak to 0
 		habit.Streak = 0
 
-		// Calculate new deadline
 		habit.NextDeadlineUTC = s.CalculateNextDeadline(habit, time.Now().UTC())
 
-		// Reset confirmation flag
 		habit.ConfirmedForCurrentPeriod = false
 
-		// Update in database
 		if err := s.habitRepo.UpdateStreakAndDeadline(ctx, habit.ID, 0, habit.NextDeadlineUTC, false); err != nil {
 			fmt.Printf("Failed to reset streak for habit %s: %v\n", habit.ID, err)
 			continue
 		}
 
 		fmt.Printf("Reset streak for habit %s (user: %s)\n", habit.ID, habit.UserID)
+	}
+
+	return nil
+}
+
+// ResetConfirmationFlags resets ConfirmedForCurrentPeriod flag for habits
+// where today is the deadline day (new period started)
+func (s *habitService) ResetConfirmationFlags(ctx context.Context) error {
+	now := time.Now().UTC()
+
+	// Get habits with deadline in ±24 hour window (to handle all timezones)
+	fromTime := now.Add(-24 * time.Hour)
+	toTime := now.Add(24 * time.Hour)
+
+	habits, err := s.habitRepo.GetHabitsToResetConfirmation(ctx, fromTime, toTime)
+	if err != nil {
+		return fmt.Errorf("failed to get habits to reset confirmation: %w", err)
+	}
+
+	for _, habit := range habits {
+		// Get current date in habit's timezone
+		currentLocalDate := habit.GetCurrentLocalDate()
+
+		// Get deadline date in habit's timezone
+		deadlineLocal := habit.GetLocalTime(habit.NextDeadlineUTC)
+		deadlineDate := time.Date(
+			deadlineLocal.Year(),
+			deadlineLocal.Month(),
+			deadlineLocal.Day(),
+			0, 0, 0, 0,
+			time.UTC,
+		).Format("2006-01-02")
+
+		// If today is the deadline day, reset confirmation flag
+		if currentLocalDate == deadlineDate {
+			if err := s.habitRepo.ResetConfirmationFlag(ctx, habit.ID); err != nil {
+				fmt.Printf("Failed to reset confirmation flag for habit %s: %v\n", habit.ID, err)
+				continue
+			}
+
+			fmt.Printf("Reset confirmation flag for habit %s (user: %s) - new period started\n", habit.ID, habit.UserID)
+		}
 	}
 
 	return nil

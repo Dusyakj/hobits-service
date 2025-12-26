@@ -10,8 +10,8 @@ const docTemplate = `{
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
         "contact": {
-            "name": "API Support",
-            "email": "support@habit-tracker.com"
+            "name": "",
+            "email": ""
         },
         "license": {
             "name": "MIT",
@@ -19,7 +19,6 @@ const docTemplate = `{
         },
         "version": "{{.Version}}"
     },
-    "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
         "/api/v1/auth/forgot-password": {

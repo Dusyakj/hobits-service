@@ -24,7 +24,6 @@ func NewRedisClient(cfg *config.RedisConfig) (*redis.Client, error) {
 		WriteTimeout: cfg.WriteTimeout,
 	})
 
-	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -40,7 +39,7 @@ func NewSessionRedisClient(cfg *config.RedisConfig) (*redis.Client, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:         cfg.GetRedisAddr(),
 		Password:     cfg.Password,
-		DB:           cfg.SessionDB, // Use separate DB for sessions
+		DB:           cfg.SessionDB,
 		MaxRetries:   cfg.MaxRetries,
 		PoolSize:     cfg.PoolSize,
 		MinIdleConns: cfg.MinIdleConns,
@@ -49,7 +48,6 @@ func NewSessionRedisClient(cfg *config.RedisConfig) (*redis.Client, error) {
 		WriteTimeout: cfg.WriteTimeout,
 	})
 
-	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

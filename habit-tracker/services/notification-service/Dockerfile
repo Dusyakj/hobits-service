@@ -26,9 +26,6 @@ COPY --from=builder /notification-service .
 # Copy configuration
 COPY config/base.yaml ./config/base.yaml
 
-# Copy email templates
-COPY templates/ ./templates/
-
 EXPOSE 9091
 
 CMD ["./notification-service"]

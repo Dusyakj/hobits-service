@@ -24,7 +24,6 @@ func NewRedisClient(cfg *config.RedisConfig) (*redis.Client, error) {
 		WriteTimeout: cfg.WriteTimeout,
 	})
 
-	// Test connection
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 

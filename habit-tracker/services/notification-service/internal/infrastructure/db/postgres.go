@@ -17,7 +17,6 @@ func NewPostgresPool(ctx context.Context, cfg *config.DatabaseConfig) (*pgxpool.
 		return nil, fmt.Errorf("failed to parse database config: %w", err)
 	}
 
-	// Additional pool configuration
 	poolConfig.MaxConns = int32(cfg.MaxOpenConns)
 	poolConfig.MinConns = int32(cfg.MaxIdleConns)
 	poolConfig.MaxConnLifetime = cfg.ConnMaxLifetime
@@ -29,7 +28,6 @@ func NewPostgresPool(ctx context.Context, cfg *config.DatabaseConfig) (*pgxpool.
 		return nil, fmt.Errorf("failed to create connection pool: %w", err)
 	}
 
-	// Test connection
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("failed to ping database: %w", err)

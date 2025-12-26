@@ -72,35 +72,35 @@ services:
       - habit-tracker-network
 
   # Kafka UI for development
-  kafka-ui:
-    image: provectuslabs/kafka-ui:latest
-    container_name: habit-tracker-kafka-ui
-    ports:
-      - "8090:8080"
-    environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-    depends_on:
-      - kafka
-    networks:
-      - habit-tracker-network
+#  kafka-ui:
+#    image: provectuslabs/kafka-ui:latest
+#    container_name: habit-tracker-kafka-ui
+#    ports:
+#      - "8090:8080"
+#    environment:
+#      KAFKA_CLUSTERS_0_NAME: local
+#      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+#    depends_on:
+#      - kafka
+#    networks:
+#      - habit-tracker-network
 
   # pgAdmin for database management
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    container_name: habit-tracker-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@habit-tracker.com
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "5050:80"
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    depends_on:
-      - postgres
-    networks:
-      - habit-tracker-network
+#  pgadmin:
+#    image: dpage/pgadmin4:latest
+#    container_name: habit-tracker-pgadmin
+#    environment:
+#      PGADMIN_DEFAULT_EMAIL: admin@habit-tracker.com
+#      PGADMIN_DEFAULT_PASSWORD: admin
+#      PGADMIN_CONFIG_SERVER_MODE: 'False'
+#    ports:
+#      - "5050:80"
+#    volumes:
+#      - pgadmin_data:/var/lib/pgadmin
+#    depends_on:
+#      - postgres
+#    networks:
+#      - habit-tracker-network
 
   # User Service
   user-service:
@@ -219,7 +219,7 @@ services:
       SMTP_FROM_EMAIL: ${SMTP_FROM_EMAIL:-noreply@habit-tracker.com}
       SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Habit Tracker}
       SMTP_USE_TLS: ${SMTP_USE_TLS:-true}
-      EMAIL_VERIFICATION_URL: http://localhost:8080/api/v1/auth/verify-email
+      EMAIL_VERIFICATION_URL: ${EMAIL_VERIFICATION_URL:-http://localhost:8080/api/v1/auth/verify-email}
       LOG_LEVEL: debug
     depends_on:
       postgres:

@@ -180,8 +180,6 @@ func (r *habitConfirmationRepository) GetStats(ctx context.Context, habitID uuid
 	stats.FirstConfirmation = firstConfirmation
 	stats.LastConfirmation = lastConfirmation
 
-	// Get current and longest streak
-	// This is a simplified implementation - a more accurate one would need the habit's schedule
 	streakQuery := `
 		WITH confirmation_dates AS (
 			SELECT
@@ -215,8 +213,6 @@ func (r *habitConfirmationRepository) GetStats(ctx context.Context, habitID uuid
 		return nil, fmt.Errorf("failed to get streak stats: %w", err)
 	}
 
-	// Calculate completion rate (simplified - assumes daily habit)
-	// A more accurate implementation would calculate based on habit schedule
 	if lastConfirmation != nil && firstConfirmation != nil {
 		daysSinceStart := int32(time.Since(*firstConfirmation).Hours() / 24)
 		if daysSinceStart > 0 {

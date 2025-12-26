@@ -38,4 +38,7 @@ type HabitService interface {
 
 	// ProcessMissedDeadlines checks for missed deadlines and resets streaks
 	ProcessMissedDeadlines(ctx context.Context) error
+
+	// ResetConfirmationFlags resets confirmation flags for habits entering new period
+	ResetConfirmationFlags(ctx context.Context) error
 }

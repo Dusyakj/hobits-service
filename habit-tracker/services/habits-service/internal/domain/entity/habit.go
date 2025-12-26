@@ -10,8 +10,8 @@ import (
 type ScheduleType string
 
 const (
-	ScheduleTypeInterval ScheduleType = "interval" // Every N days
-	ScheduleTypeWeekly   ScheduleType = "weekly"   // Specific days of week
+	ScheduleTypeInterval ScheduleType = "interval"
+	ScheduleTypeWeekly   ScheduleType = "weekly"
 )
 
 // Habit represents a user's habit
@@ -19,12 +19,10 @@ type Habit struct {
 	ID     uuid.UUID
 	UserID uuid.UUID
 
-	// Basic info
 	Name        string
 	Description *string
 	Color       *string // HEX color, e.g., "#FF5722"
 
-	// Schedule configuration
 	ScheduleType ScheduleType
 	IntervalDays *int32  // Required for interval type (1=daily, 2=every other day, etc.)
 	WeeklyDays   []int32 // Required for weekly type (0=Sunday, 1=Monday, ..., 6=Saturday)
@@ -32,13 +30,11 @@ type Habit struct {
 	// Timezone offset in hours from UTC (-12 to +14)
 	TimezoneOffsetHours int32
 
-	// Streak state
 	Streak                    int32
 	NextDeadlineUTC           time.Time
 	ConfirmedForCurrentPeriod bool
 	LastConfirmedAt           *time.Time
 
-	// Metadata
 	IsActive  bool
 	CreatedAt time.Time
 	UpdatedAt time.Time

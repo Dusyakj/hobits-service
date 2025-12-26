@@ -27,7 +27,6 @@ func NewClient(cfg *config.SMTPConfig, emailCfg *config.EmailConfig) (*Client, e
 		templates: make(map[string]*template.Template),
 	}
 
-	// Load email templates
 	if err := client.loadTemplates(); err != nil {
 		return nil, fmt.Errorf("failed to load email templates: %w", err)
 	}
@@ -37,12 +36,10 @@ func NewClient(cfg *config.SMTPConfig, emailCfg *config.EmailConfig) (*Client, e
 
 // loadTemplates loads all email templates
 func (c *Client) loadTemplates() error {
-	// Email verification template
 	verificationTemplate, err := template.ParseFiles(
 		filepath.Join(c.emailCfg.TemplatesPath, "verification.html"),
 	)
 	if err != nil {
-		// If template file doesn't exist, use default template
 		verificationTemplate, err = template.New("verification").Parse(defaultVerificationTemplate)
 		if err != nil {
 			return fmt.Errorf("failed to parse default verification template: %w", err)
@@ -50,12 +47,10 @@ func (c *Client) loadTemplates() error {
 	}
 	c.templates["verification"] = verificationTemplate
 
-	// Password reset template
 	resetTemplate, err := template.ParseFiles(
 		filepath.Join(c.emailCfg.TemplatesPath, "password_reset.html"),
 	)
 	if err != nil {
-		// If template file doesn't exist, use default template
 		resetTemplate, err = template.New("password_reset").Parse(defaultPasswordResetTemplate)
 		if err != nil {
 			return fmt.Errorf("failed to parse default password reset template: %w", err)
@@ -63,12 +58,10 @@ func (c *Client) loadTemplates() error {
 	}
 	c.templates["password_reset"] = resetTemplate
 
-	// Password changed template
 	changedTemplate, err := template.ParseFiles(
 		filepath.Join(c.emailCfg.TemplatesPath, "password_changed.html"),
 	)
 	if err != nil {
-		// If template file doesn't exist, use default template
 		changedTemplate, err = template.New("password_changed").Parse(defaultPasswordChangedTemplate)
 		if err != nil {
 			return fmt.Errorf("failed to parse default password changed template: %w", err)
@@ -103,7 +96,7 @@ func (c *Client) SendPasswordResetEmail(ctx context.Context, to, username, first
 	resetURL := fmt.Sprintf("%s/reset-password?token=%s", c.emailCfg.VerificationURL, resetToken)
 
 	data := map[string]interface{}{
-		"Username": username,
+		"Username":  username,
 		"FirstName": firstName,
 		"ResetURL":  resetURL,
 	}

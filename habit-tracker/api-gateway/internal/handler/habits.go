@@ -43,7 +43,6 @@ func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Get user_id from context (set by auth middleware)
 	userID := middleware.GetUserID(r)
 	if userID == "" {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -65,7 +64,6 @@ func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Map schedule type to proto enum and validate schedule fields
 	var scheduleType pb.ScheduleType
 	var intervalDays *int32
 	var weeklyDays []int32
@@ -78,7 +76,6 @@ func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		intervalDays = req.IntervalDays
-		// weeklyDays stays nil
 	case "weekly":
 		scheduleType = pb.ScheduleType_SCHEDULE_TYPE_WEEKLY
 		if req.WeeklyDays == nil || len(req.WeeklyDays) == 0 {
@@ -86,7 +83,6 @@ func (h *HabitHandler) CreateHabit(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		weeklyDays = req.WeeklyDays
-		// intervalDays stays nil
 	default:
 		http.Error(w, "Invalid schedule_type", http.StatusBadRequest)
 		return
@@ -141,7 +137,6 @@ func (h *HabitHandler) GetHabit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract habit ID from query parameter
 	habitID := r.URL.Query().Get("id")
 	if habitID == "" {
 		http.Error(w, "Habit ID is required", http.StatusBadRequest)
@@ -189,7 +184,6 @@ func (h *HabitHandler) ListHabits(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse query parameters
 	activeOnly := r.URL.Query().Get("active_only") == "true"
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -224,9 +218,9 @@ func (h *HabitHandler) ListHabits(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} object{error=string}
 // @Failure 401 {object} object{error=string}
 // @Failure 404 {object} object{error=string}
-// @Router /api/v1/habits/update [post]
+// @Router /api/v1/habits/update [put]
 func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPut && r.Method != http.MethodPost {
+	if r.Method != http.MethodPut {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -270,7 +264,6 @@ func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
 		Timezone:    req.Timezone,
 	}
 
-	// Map schedule type if provided and validate schedule fields
 	if req.ScheduleType != nil {
 		var scheduleType pb.ScheduleType
 		switch strings.ToLower(*req.ScheduleType) {
@@ -281,7 +274,6 @@ func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			grpcReq.IntervalDays = req.IntervalDays
-			// Don't set WeeklyDays - it will remain nil
 		case "weekly":
 			scheduleType = pb.ScheduleType_SCHEDULE_TYPE_WEEKLY
 			if req.WeeklyDays == nil || len(req.WeeklyDays) == 0 {
@@ -289,14 +281,12 @@ func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			grpcReq.WeeklyDays = req.WeeklyDays
-			// Don't set IntervalDays - it will remain nil
 		default:
 			http.Error(w, "Invalid schedule_type", http.StatusBadRequest)
 			return
 		}
 		grpcReq.ScheduleType = &scheduleType
 	} else {
-		// If schedule_type is not being updated, allow setting interval_days or weekly_days independently
 		grpcReq.IntervalDays = req.IntervalDays
 		grpcReq.WeeklyDays = req.WeeklyDays
 	}
@@ -322,9 +312,9 @@ func (h *HabitHandler) UpdateHabit(w http.ResponseWriter, r *http.Request) {
 // @Failure 400 {object} object{error=string}
 // @Failure 401 {object} object{error=string}
 // @Failure 404 {object} object{error=string}
-// @Router /api/v1/habits/delete [post]
+// @Router /api/v1/habits/delete [delete]
 func (h *HabitHandler) DeleteHabit(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete && r.Method != http.MethodPost {
+	if r.Method != http.MethodDelete {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -453,7 +443,6 @@ func (h *HabitHandler) GetHabitHistory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Parse pagination parameters
 	limitStr := r.URL.Query().Get("limit")
 	offsetStr := r.URL.Query().Get("offset")
 
