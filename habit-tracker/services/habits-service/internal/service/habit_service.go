@@ -383,9 +383,9 @@ func (s *habitService) ProcessMissedDeadlines(ctx context.Context) error {
 
 		habit.NextDeadlineUTC = s.CalculateNextDeadline(habit, time.Now().UTC())
 
-		habit.ConfirmedForCurrentPeriod = false
+		habit.ConfirmedForCurrentPeriod = true
 
-		if err := s.habitRepo.UpdateStreakAndDeadline(ctx, habit.ID, 0, habit.NextDeadlineUTC, false); err != nil {
+		if err := s.habitRepo.UpdateStreakAndDeadline(ctx, habit.ID, 0, habit.NextDeadlineUTC, true); err != nil {
 			fmt.Printf("Failed to reset streak for habit %s: %v\n", habit.ID, err)
 			continue
 		}
@@ -401,7 +401,6 @@ func (s *habitService) ProcessMissedDeadlines(ctx context.Context) error {
 func (s *habitService) ResetConfirmationFlags(ctx context.Context) error {
 	now := time.Now().UTC()
 
-	// Get habits with deadline in ±24 hour window (to handle all timezones)
 	fromTime := now.Add(-24 * time.Hour)
 	toTime := now.Add(24 * time.Hour)
 
@@ -411,10 +410,8 @@ func (s *habitService) ResetConfirmationFlags(ctx context.Context) error {
 	}
 
 	for _, habit := range habits {
-		// Get current date in habit's timezone
 		currentLocalDate := habit.GetCurrentLocalDate()
 
-		// Get deadline date in habit's timezone
 		deadlineLocal := habit.GetLocalTime(habit.NextDeadlineUTC)
 		deadlineDate := time.Date(
 			deadlineLocal.Year(),
@@ -424,7 +421,6 @@ func (s *habitService) ResetConfirmationFlags(ctx context.Context) error {
 			time.UTC,
 		).Format("2006-01-02")
 
-		// If today is the deadline day, reset confirmation flag
 		if currentLocalDate == deadlineDate {
 			if err := s.habitRepo.ResetConfirmationFlag(ctx, habit.ID); err != nil {
 				fmt.Printf("Failed to reset confirmation flag for habit %s: %v\n", habit.ID, err)
@@ -433,6 +429,32 @@ func (s *habitService) ResetConfirmationFlags(ctx context.Context) error {
 
 			fmt.Printf("Reset confirmation flag for habit %s (user: %s) - new period started\n", habit.ID, habit.UserID)
 		}
+	}
+
+	return nil
+}
+
+// ProcessExpiredConfirmedDeadlines processes habits where deadline passed more than a day ago
+// but habit is still confirmed (moves them to next period)
+func (s *habitService) ProcessExpiredConfirmedDeadlines(ctx context.Context) error {
+	now := time.Now().UTC()
+
+	beforeTime := now.Add(-24 * time.Hour)
+
+	habits, err := s.habitRepo.GetConfirmedHabitsWithExpiredDeadlines(ctx, beforeTime)
+	if err != nil {
+		return fmt.Errorf("failed to get confirmed habits with expired deadlines: %w", err)
+	}
+
+	for _, habit := range habits {
+		habit.NextDeadlineUTC = s.CalculateNextDeadline(habit, habit.NextDeadlineUTC)
+
+		if err := s.habitRepo.UpdateStreakAndDeadline(ctx, habit.ID, habit.Streak, habit.NextDeadlineUTC, true); err != nil {
+			fmt.Printf("Failed to update expired confirmed habit %s: %v\n", habit.ID, err)
+			continue
+		}
+
+		fmt.Printf("Moved habit %s to next period (user: %s)\n", habit.ID, habit.UserID)
 	}
 
 	return nil

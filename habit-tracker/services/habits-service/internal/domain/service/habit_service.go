@@ -41,4 +41,7 @@ type HabitService interface {
 
 	// ResetConfirmationFlags resets confirmation flags for habits entering new period
 	ResetConfirmationFlags(ctx context.Context) error
+
+	// ProcessExpiredConfirmedDeadlines moves confirmed habits with expired deadlines to next period
+	ProcessExpiredConfirmedDeadlines(ctx context.Context) error
 }

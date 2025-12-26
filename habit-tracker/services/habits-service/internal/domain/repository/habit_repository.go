@@ -35,6 +35,9 @@ type HabitRepository interface {
 	// (to reset confirmation flag for new period)
 	GetHabitsToResetConfirmation(ctx context.Context, fromTime, toTime time.Time) ([]*entity.Habit, error)
 
+	// GetConfirmedHabitsWithExpiredDeadlines retrieves confirmed habits where deadline passed more than a day ago
+	GetConfirmedHabitsWithExpiredDeadlines(ctx context.Context, beforeTime time.Time) ([]*entity.Habit, error)
+
 	// ResetConfirmationFlag resets the confirmed_for_current_period flag for a habit
 	ResetConfirmationFlag(ctx context.Context, habitID uuid.UUID) error
 

@@ -61,16 +61,19 @@ func (d *DeadlineChecker) checkDeadlines() {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	// Reset confirmation flags for habits entering new period
-	err := d.habitService.ResetConfirmationFlags(ctx)
+	err := d.habitService.ProcessExpiredConfirmedDeadlines(ctx)
 	if err != nil {
-		log.Printf("Error resetting confirmation flags: %v", err)
+		log.Printf("Error processing expired confirmed deadlines: %v", err)
 	}
 
-	// Process missed deadlines and reset streaks
 	err = d.habitService.ProcessMissedDeadlines(ctx)
 	if err != nil {
 		log.Printf("Error processing missed deadlines: %v", err)
+	}
+
+	err = d.habitService.ResetConfirmationFlags(ctx)
+	if err != nil {
+		log.Printf("Error resetting confirmation flags: %v", err)
 		return
 	}
 
